@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ar" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Shark Engine</title>
+    <style>
+        /* الأنماط كما هي */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: #000;
+            font-family: sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .dialog {
+            background-color: #121212;
+            border-radius: 20px;
+            padding: 30px 20px;
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid #ffd700;
+            text-align: center;
+        }
+        .title {
+            color: #ffd700;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .loading-subtitle {
+            color: #ccc;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        .circular-progress {
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            background: conic-gradient(#ffd700 0deg, #333 0deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin: 0 auto;
+        }
+        .circular-progress::before {
+            content: "";
+            position: absolute;
+            width: 60px; height: 60px;
+            border-radius: 50%;
+            background-color: #121212;
+        }
+        .progress-value {
+            position: relative;
+            color: #ffd700;
+            font-size: 18px;
+            font-weight: bold;
+            z-index: 1;
+        }
+        .subtitle {
+            color: #ccc;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .input-field {
+            width: 100%;
+            background-color: #333;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 15px;
+            color: #fff;
+            font-size: 14px;
+            margin-bottom: 20px;
+            outline: none;
+        }
+        .input-field:focus { outline: 2px solid #ffd700; }
+        .btn-access, .btn-welcome {
+            width: 100%;
+            background-color: #ffd700;
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            color: #121212;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 15px;
+            transition: background-color 0.2s;
+        }
+        .btn-access:disabled, .btn-welcome:disabled { opacity: 0.6; }
+        .btn-access:hover, .btn-welcome:hover { background-color: #e6c200; }
+        .btn-welcome.outline {
+            background-color: transparent;
+            border: 2px solid #ffd700;
+            color: #ffd700;
+        }
+        .btn-welcome.outline:hover {
+            background-color: #ffd70022;
+        }
+        .status-message {
+            text-align: center;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+        .error-message { color: #ff6b6b; }
+        .success-message { color: #6bc96b; }
+        .spinner {
+            display: inline-block;
+            width: 16px; height: 16px;
+            border: 2px solid rgba(255,215,0,0.3);
+            border-radius: 50%;
+            border-top-color: #ffd700;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .hidden { display: none !important; }
+        /* تصميم الأزرار في شاشة الترحيب */
+        .welcome-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- شاشة التحميل -->
+    <div id="loadingOverlay" class="overlay">
+        <div class="dialog">
+            <div class="title">Shark Engine</div>
+            <div class="loading-subtitle">Loading, please wait...</div>
+            <div class="circular-progress" id="circularProgress">
+                <span class="progress-value" id="progressValue">0%</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- شاشة الترحيب -->
+    <div id="welcomeOverlay" class="overlay hidden">
+        <div class="dialog">
+            <div class="title">Shark Engine</div>
+            <div class="subtitle">Welcome! Choose an option:</div>
+            <div class="welcome-buttons">
+                <button id="officialChannelBtn" class="btn-welcome">Official Channel</button>
+                <button id="getKeyBtn" class="btn-welcome">Get Key</button>
+                <button id="haveKeyBtn" class="btn-welcome outline">I Have Key</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- شاشة تسجيل الدخول (تم إزالة رابط Get Key منها) -->
+    <div id="loginOverlay" class="overlay hidden">
+        <div class="dialog">
+            <div class="title">Shark Engine</div>
+            <div class="subtitle">Sign in using your key...</div>
+            <input type="text" id="keyInput" class="input-field" placeholder="SHARK-4WRUO" autocomplete="off">
+            <button id="accessBtn" class="btn-access">ACCESS</button>
+            <div id="errorMessage" class="status-message error-message hidden"></div>
+            <div id="successMessage" class="status-message success-message hidden"></div>
+        </div>
+    </div>
+
+    <script>
+        // -------------------- إعدادات Firebase --------------------
+        const FIREBASE_BASE_URL = 'https://shark-d6586-default-rtdb.firebaseio.com/';
+
+        // -------------------- العناصر --------------------
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const welcomeOverlay = document.getElementById('welcomeOverlay');
+        const loginOverlay = document.getElementById('loginOverlay');
+        const circularProgress = document.getElementById('circularProgress');
+        const progressValue = document.getElementById('progressValue');
+        const keyInput = document.getElementById('keyInput');
+        const accessBtn = document.getElementById('accessBtn');
+        const errorDiv = document.getElementById('errorMessage');
+        const successDiv = document.getElementById('successMessage');
+
+        // أزرار الترحيب
+        const officialChannelBtn = document.getElementById('officialChannelBtn');
+        const getKeyBtn = document.getElementById('getKeyBtn');
+        const haveKeyBtn = document.getElementById('haveKeyBtn');
+
+        // -------------------- التحقق من وجود العناصر --------------------
+        console.log('loadingOverlay:', loadingOverlay);
+        console.log('welcomeOverlay:', welcomeOverlay);
+        console.log('loginOverlay:', loginOverlay);
+
+        // -------------------- دوال مساعدة --------------------
+        function hideMessages() {
+            errorDiv.classList.add('hidden');
+            successDiv.classList.add('hidden');
+        }
+        function showError(msg) {
+            successDiv.classList.add('hidden');
+            errorDiv.textContent = msg;
+            errorDiv.classList.remove('hidden');
+        }
+        function showSuccess(msg) {
+            errorDiv.classList.add('hidden');
+            successDiv.textContent = msg;
+            successDiv.classList.remove('hidden');
+        }
+
+        // تحديث شريط التقدم
+        function updateProgress(percent) {
+            const degrees = (percent * 360) / 100;
+            circularProgress.style.background = `conic-gradient(#ffd700 ${degrees}deg, #333 ${degrees}deg)`;
+            progressValue.textContent = Math.round(percent) + '%';
+        }
+
+        // بدء التحميل لمدة 3 ثوانٍ والانتقال
+        function startLoadingAndThen(callback) {
+            let percent = 0;
+            const interval = setInterval(() => {
+                percent += 1;
+                updateProgress(percent);
+                if (percent >= 100) clearInterval(interval);
+            }, 30);
+
+            setTimeout(() => {
+                clearInterval(interval);
+                updateProgress(100);
+                console.log('Callback executed');
+                callback();
+            }, 3000);
+        }
+
+        // -------------------- معالجة تسجيل الدخول --------------------
+        async function handleLogin() {
+            const key = keyInput.value.trim();
+            if (!key) {
+                showError('Please enter license key!');
+                return;
+            }
+            accessBtn.disabled = true;
+            accessBtn.innerHTML = '<span class="spinner"></span> ACCESS';
+            hideMessages();
+
+            try {
+                const url = `${FIREBASE_BASE_URL}ValidKeys/${encodeURIComponent(key)}.json`;
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+                const data = await response.json();
+
+                if (data === null) {
+                    showError('Invalid license key!');
+                    accessBtn.disabled = false;
+                    accessBtn.innerHTML = 'ACCESS';
+                } else {
+                    showSuccess('✓ Login Successful! Key verified');
+                    localStorage.setItem('shark_logged_in', 'true');
+                    localStorage.setItem('shark_key', key);
+                    setTimeout(() => {
+                        if (window.Android) {
+                            if (typeof Android.onSuccess === 'function') Android.onSuccess(key);
+                            else if (typeof Android.closeDialog === 'function') Android.closeDialog();
+                        } else {
+                            console.log('Browser mode: logged in');
+                        }
+                    }, 800);
+                }
+            } catch (error) {
+                showError('Connection failed: ' + error.message);
+                accessBtn.disabled = false;
+                accessBtn.innerHTML = 'ACCESS';
+            }
+        }
+
+        // -------------------- دالة إغلاق التطبيق (مُحسّنة للمتصفح) --------------------
+        function closeApp() {
+            if (window.Android) {
+                if (typeof Android.onSuccess === 'function') Android.onSuccess(localStorage.getItem('shark_key') || '');
+                else if (typeof Android.closeDialog === 'function') Android.closeDialog();
+            } else {
+                // بيئة المتصفح: نعيد تعيين الدخول ونظهر شاشة الترحيب
+                console.log('Browser mode: resetting login and showing welcome');
+                localStorage.removeItem('shark_logged_in');
+                localStorage.removeItem('shark_key');
+                loadingOverlay.classList.add('hidden');
+                welcomeOverlay.classList.remove('hidden');
+            }
+        }
+
+        // -------------------- أحداث شاشة الترحيب --------------------
+        officialChannelBtn.addEventListener('click', () => {
+            window.open('https://t.me/Ex8pro', '_blank');
+        });
+
+        getKeyBtn.addEventListener('click', () => {
+            window.open('https://t.me/Ex8pro/1639', '_blank');
+        });
+
+        haveKeyBtn.addEventListener('click', () => {
+            // الانتقال إلى شاشة تسجيل الدخول
+            welcomeOverlay.classList.add('hidden');
+            loginOverlay.classList.remove('hidden');
+        });
+
+        // -------------------- بدء التطبيق --------------------
+        (function init() {
+            // نبدأ بشاشة التحميل ظاهرة
+            loadingOverlay.classList.remove('hidden');
+            welcomeOverlay.classList.add('hidden');
+            loginOverlay.classList.add('hidden');
+
+            const isLoggedIn = localStorage.getItem('shark_logged_in') === 'true';
+            const savedKey = localStorage.getItem('shark_key');
+
+            if (isLoggedIn && savedKey) {
+                // مستخدم مسجل مسبقاً: بعد التحميل نغلق التطبيق (أو نظهر الترحيب في المتصفح)
+                startLoadingAndThen(() => {
+                    closeApp();  // في المتصفح سينقل إلى الترحيب بعد reset
+                });
+            } else {
+                // مستخدم جديد: بعد التحميل نظهر شاشة الترحيب
+                startLoadingAndThen(() => {
+                    loadingOverlay.classList.add('hidden');
+                    welcomeOverlay.classList.remove('hidden');
+                });
+            }
+        })();
+
+        // -------------------- إضافة الأحداث لشاشة الدخول --------------------
+        accessBtn.addEventListener('click', handleLogin);
+        keyInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleLogin();
+        });
+    </script>
+</body>
+</html>
