@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Shark Engine</title>
     <style>
-        /* الأنماط مع إضافة min-height موحد لجميع الحوارات */
+        /* الأنماط مع تحجيم الحوارات لتناسب عرض الهاتف */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background-color: #000;
@@ -28,29 +28,29 @@
         .dialog {
             background-color: #121212;
             border-radius: 20px;
-            padding: 30px 20px;
-            max-width: 500px;
+            padding: 20px 15px;  /* تصغير padding */
+            max-width: 350px;     /* عرض أصغر للهاتف */
             width: 90%;
-            min-height: 350px; /* نفس الارتفاع الأدنى لجميع الحوارات */
+            min-height: 300px;     /* تقليل الارتفاع الأدنى قليلاً */
             border: 1px solid #ffd700;
             text-align: center;
             display: flex;
             flex-direction: column;
-            justify-content: center; /* لمحاذاة المحتوى عمودياً في الوسط */
+            justify-content: center;
         }
         .title {
             color: #ffd700;
-            font-size: 28px;
+            font-size: 24px;      /* تصغير الخط */
             font-weight: bold;
-            margin-bottom: 20px;
+            margin-bottom: 15px;   /* تقليل المسافة */
         }
         .loading-subtitle {
             color: #ccc;
-            font-size: 14px;
-            margin-bottom: 30px;
+            font-size: 13px;       /* تصغير الخط */
+            margin-bottom: 25px;
         }
         .circular-progress {
-            width: 80px; height: 80px;
+            width: 70px; height: 70px;   /* تصغير الدائرة */
             border-radius: 50%;
             background: conic-gradient(#ffd700 0deg, #333 0deg);
             display: flex;
@@ -62,31 +62,31 @@
         .circular-progress::before {
             content: "";
             position: absolute;
-            width: 60px; height: 60px;
+            width: 52px; height: 52px;   /* متناسبة مع التصغير */
             border-radius: 50%;
             background-color: #121212;
         }
         .progress-value {
             position: relative;
             color: #ffd700;
-            font-size: 18px;
+            font-size: 16px;       /* تصغير الخط */
             font-weight: bold;
             z-index: 1;
         }
         .subtitle {
             color: #ccc;
-            font-size: 14px;
-            margin-bottom: 20px;
+            font-size: 13px;        /* تصغير الخط */
+            margin-bottom: 15px;
         }
         .input-field {
             width: 100%;
             background-color: #333;
             border: none;
             border-radius: 8px;
-            padding: 12px 15px;
+            padding: 10px 12px;      /* تقليل الحشوة */
             color: #fff;
-            font-size: 14px;
-            margin-bottom: 20px;
+            font-size: 13px;
+            margin-bottom: 15px;
             outline: none;
         }
         .input-field:focus { outline: 2px solid #ffd700; }
@@ -95,12 +95,12 @@
             background-color: #ffd700;
             border: none;
             border-radius: 8px;
-            padding: 12px;
+            padding: 10px;            /* تقليل الحشوة */
             color: #121212;
-            font-size: 14px;
+            font-size: 13px;          /* تصغير الخط */
             font-weight: bold;
             cursor: pointer;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             transition: background-color 0.2s;
         }
         .btn-access:disabled, .btn-welcome:disabled { opacity: 0.6; }
@@ -115,19 +115,19 @@
         }
         .status-message {
             text-align: center;
-            font-size: 14px;
-            margin-top: 8px;
+            font-size: 12px;          /* تصغير الخط */
+            margin-top: 5px;
         }
         .error-message { color: #ff6b6b; }
         .success-message { color: #6bc96b; }
         .spinner {
             display: inline-block;
-            width: 16px; height: 16px;
+            width: 14px; height: 14px; /* تصغير */
             border: 2px solid rgba(255,215,0,0.3);
             border-radius: 50%;
             border-top-color: #ffd700;
             animation: spin 0.8s linear infinite;
-            margin-right: 8px;
+            margin-right: 5px;
             vertical-align: middle;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -136,8 +136,8 @@
         .welcome-buttons {
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            margin-top: 20px;
+            gap: 10px;
+            margin-top: 15px;
         }
     </style>
 </head>
