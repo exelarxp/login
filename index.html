@@ -28,29 +28,34 @@
         .dialog {
             background-color: #121212;
             border-radius: 20px;
-            padding: 20px 15px;  /* تصغير padding */
-            max-width: 350px;     /* عرض أصغر للهاتف */
+            padding: 20px 15px;
+            max-width: 350px;
             width: 90%;
-            min-height: 300px;     /* تقليل الارتفاع الأدنى قليلاً */
+            min-height: 300px;      /* ارتفاع افتراضي للمربع */
             border: 1px solid #ffd700;
             text-align: center;
             display: flex;
             flex-direction: column;
             justify-content: center;
         }
+        /* تخصيص حوار تسجيل الدخول ليكون مستطيلاً (عرض > ارتفاع) */
+        #loginOverlay .dialog {
+            min-height: 200px;      /* تقليل الارتفاع ليصبح مستطيلاً */
+            padding: 15px;           /* تقليل الحشوة الرأسية */
+        }
         .title {
             color: #ffd700;
-            font-size: 24px;      /* تصغير الخط */
+            font-size: 24px;
             font-weight: bold;
-            margin-bottom: 15px;   /* تقليل المسافة */
+            margin-bottom: 15px;
         }
         .loading-subtitle {
             color: #ccc;
-            font-size: 13px;       /* تصغير الخط */
+            font-size: 13px;
             margin-bottom: 25px;
         }
         .circular-progress {
-            width: 70px; height: 70px;   /* تصغير الدائرة */
+            width: 70px; height: 70px;
             border-radius: 50%;
             background: conic-gradient(#ffd700 0deg, #333 0deg);
             display: flex;
@@ -62,20 +67,20 @@
         .circular-progress::before {
             content: "";
             position: absolute;
-            width: 52px; height: 52px;   /* متناسبة مع التصغير */
+            width: 52px; height: 52px;
             border-radius: 50%;
             background-color: #121212;
         }
         .progress-value {
             position: relative;
             color: #ffd700;
-            font-size: 16px;       /* تصغير الخط */
+            font-size: 16px;
             font-weight: bold;
             z-index: 1;
         }
         .subtitle {
             color: #ccc;
-            font-size: 13px;        /* تصغير الخط */
+            font-size: 13px;
             margin-bottom: 15px;
         }
         .input-field {
@@ -83,7 +88,7 @@
             background-color: #333;
             border: none;
             border-radius: 8px;
-            padding: 10px 12px;      /* تقليل الحشوة */
+            padding: 10px 12px;
             color: #fff;
             font-size: 13px;
             margin-bottom: 15px;
@@ -95,9 +100,9 @@
             background-color: #ffd700;
             border: none;
             border-radius: 8px;
-            padding: 10px;            /* تقليل الحشوة */
+            padding: 10px;
             color: #121212;
-            font-size: 13px;          /* تصغير الخط */
+            font-size: 13px;
             font-weight: bold;
             cursor: pointer;
             margin-bottom: 12px;
@@ -115,14 +120,14 @@
         }
         .status-message {
             text-align: center;
-            font-size: 12px;          /* تصغير الخط */
+            font-size: 12px;
             margin-top: 5px;
         }
         .error-message { color: #ff6b6b; }
         .success-message { color: #6bc96b; }
         .spinner {
             display: inline-block;
-            width: 14px; height: 14px; /* تصغير */
+            width: 14px; height: 14px;
             border: 2px solid rgba(255,215,0,0.3);
             border-radius: 50%;
             border-top-color: #ffd700;
