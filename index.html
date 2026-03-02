@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Shark Engine</title>
     <style>
-        /* الأنماط كما هي */
+        /* الأنماط مع إضافة min-height موحد لجميع الحوارات */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background-color: #000;
@@ -31,8 +31,12 @@
             padding: 30px 20px;
             max-width: 500px;
             width: 90%;
+            min-height: 350px; /* نفس الارتفاع الأدنى لجميع الحوارات */
             border: 1px solid #ffd700;
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* لمحاذاة المحتوى عمودياً في الوسط */
         }
         .title {
             color: #ffd700;
@@ -162,7 +166,7 @@
         </div>
     </div>
 
-    <!-- شاشة تسجيل الدخول (تم إزالة رابط Get Key منها) -->
+    <!-- شاشة تسجيل الدخول -->
     <div id="loginOverlay" class="overlay hidden">
         <div class="dialog">
             <div class="title">Shark Engine</div>
@@ -193,11 +197,6 @@
         const officialChannelBtn = document.getElementById('officialChannelBtn');
         const getKeyBtn = document.getElementById('getKeyBtn');
         const haveKeyBtn = document.getElementById('haveKeyBtn');
-
-        // -------------------- التحقق من وجود العناصر --------------------
-        console.log('loadingOverlay:', loadingOverlay);
-        console.log('welcomeOverlay:', welcomeOverlay);
-        console.log('loginOverlay:', loginOverlay);
 
         // -------------------- دوال مساعدة --------------------
         function hideMessages() {
@@ -234,7 +233,6 @@
             setTimeout(() => {
                 clearInterval(interval);
                 updateProgress(100);
-                console.log('Callback executed');
                 callback();
             }, 3000);
         }
@@ -262,8 +260,7 @@
                     accessBtn.innerHTML = 'ACCESS';
                 } else {
                     showSuccess('✓ Login Successful! Key verified');
-                    localStorage.setItem('shark_logged_in', 'true');
-                    localStorage.setItem('shark_key', key);
+                    // تم إزالة حفظ المفتاح في localStorage لضمان ظهور الشاشة في كل مرة
                     setTimeout(() => {
                         if (window.Android) {
                             if (typeof Android.onSuccess === 'function') Android.onSuccess(key);
@@ -280,7 +277,7 @@
             }
         }
 
-        // -------------------- دالة إغلاق التطبيق (مُحسّنة للمتصفح) --------------------
+        // -------------------- دالة إغلاق التطبيق (للمتصفح) --------------------
         function closeApp() {
             if (window.Android) {
                 if (typeof Android.onSuccess === 'function') Android.onSuccess(localStorage.getItem('shark_key') || '');
@@ -317,21 +314,11 @@
             welcomeOverlay.classList.add('hidden');
             loginOverlay.classList.add('hidden');
 
-            const isLoggedIn = localStorage.getItem('shark_logged_in') === 'true';
-            const savedKey = localStorage.getItem('shark_key');
-
-            if (isLoggedIn && savedKey) {
-                // مستخدم مسجل مسبقاً: بعد التحميل نغلق التطبيق (أو نظهر الترحيب في المتصفح)
-                startLoadingAndThen(() => {
-                    closeApp();  // في المتصفح سينقل إلى الترحيب بعد reset
-                });
-            } else {
-                // مستخدم جديد: بعد التحميل نظهر شاشة الترحيب
-                startLoadingAndThen(() => {
-                    loadingOverlay.classList.add('hidden');
-                    welcomeOverlay.classList.remove('hidden');
-                });
-            }
+            // بعد التحميل، نظهر شاشة الترحيب دائماً (بدون التحقق من localStorage)
+            startLoadingAndThen(() => {
+                loadingOverlay.classList.add('hidden');
+                welcomeOverlay.classList.remove('hidden');
+            });
         })();
 
         // -------------------- إضافة الأحداث لشاشة الدخول --------------------
