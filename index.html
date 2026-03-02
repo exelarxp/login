@@ -31,7 +31,7 @@
             padding: 20px 15px;
             max-width: 350px;
             width: 90%;
-            min-height: 300px;      /* ارتفاع افتراضي للمربع */
+            min-height: 300px;
             border: 1px solid #ffd700;
             text-align: center;
             display: flex;
@@ -40,8 +40,8 @@
         }
         /* تخصيص حوار تسجيل الدخول ليكون مستطيلاً (عرض > ارتفاع) */
         #loginOverlay .dialog {
-            min-height: 200px;      /* تقليل الارتفاع ليصبح مستطيلاً */
-            padding: 15px;           /* تقليل الحشوة الرأسية */
+            min-height: 200px;
+            padding: 15px;
         }
         .title {
             color: #ffd700;
@@ -203,6 +203,10 @@
         const getKeyBtn = document.getElementById('getKeyBtn');
         const haveKeyBtn = document.getElementById('haveKeyBtn');
 
+        // -------------------- متغيرات لمنع التكرار --------------------
+        let isProcessingLogin = false;      // يمنع تنفيذ أكثر من عملية تسجيل دخول في نفس الوقت
+        let successTimeout = null;           // مرجع لـ setTimeout الخاص بالنجاح
+
         // -------------------- دوال مساعدة --------------------
         function hideMessages() {
             errorDiv.classList.add('hidden');
@@ -242,16 +246,31 @@
             }, 3000);
         }
 
-        // -------------------- معالجة تسجيل الدخول --------------------
+        // -------------------- معالجة تسجيل الدخول (مع منع التكرار) --------------------
         async function handleLogin() {
+            // منع أي تنفيذ متزامن آخر
+            if (isProcessingLogin) {
+                console.log('Login already in progress, ignoring duplicate click.');
+                return;
+            }
+
             const key = keyInput.value.trim();
             if (!key) {
                 showError('Please enter license key!');
                 return;
             }
+
+            // تعطيل الزر ومنع التكرار
+            isProcessingLogin = true;
             accessBtn.disabled = true;
             accessBtn.innerHTML = '<span class="spinner"></span> ACCESS';
             hideMessages();
+
+            // إلغاء أي مهلة سابقة (احتياطاً)
+            if (successTimeout) {
+                clearTimeout(successTimeout);
+                successTimeout = null;
+            }
 
             try {
                 const url = `${FIREBASE_BASE_URL}ValidKeys/${encodeURIComponent(key)}.json`;
@@ -261,24 +280,35 @@
 
                 if (data === null) {
                     showError('Invalid license key!');
+                    // إعادة تمكين الزر وإعادة تعيين العلم
                     accessBtn.disabled = false;
                     accessBtn.innerHTML = 'ACCESS';
+                    isProcessingLogin = false;
                 } else {
                     showSuccess('✓ Login Successful! Key verified');
-                    // تم إزالة حفظ المفتاح في localStorage لضمان ظهور الشاشة في كل مرة
-                    setTimeout(() => {
+
+                    // تأخير تنفيذ كود Android لضمان ظهور رسالة النجاح
+                    successTimeout = setTimeout(() => {
                         if (window.Android) {
-                            if (typeof Android.onSuccess === 'function') Android.onSuccess(key);
-                            else if (typeof Android.closeDialog === 'function') Android.closeDialog();
+                            if (typeof Android.onSuccess === 'function') {
+                                Android.onSuccess(key);
+                            } else if (typeof Android.closeDialog === 'function') {
+                                Android.closeDialog();
+                            }
                         } else {
                             console.log('Browser mode: logged in');
                         }
+
+                        // بعد تنفيذ كود Android، نعيد تعيين العلم (لكن قد يتم إغلاق الصفحة)
+                        isProcessingLogin = false;
+                        successTimeout = null;
                     }, 800);
                 }
             } catch (error) {
                 showError('Connection failed: ' + error.message);
                 accessBtn.disabled = false;
                 accessBtn.innerHTML = 'ACCESS';
+                isProcessingLogin = false;
             }
         }
 
@@ -307,7 +337,7 @@
         });
 
         haveKeyBtn.addEventListener('click', () => {
-            // الانتقال إلى شاشة تسجيل الدخول
+            // الانتقال إلى شاشة تسجيل الدخول (حتى لو نقر مرتين، لن يحدث ضرر)
             welcomeOverlay.classList.add('hidden');
             loginOverlay.classList.remove('hidden');
         });
@@ -319,7 +349,7 @@
             welcomeOverlay.classList.add('hidden');
             loginOverlay.classList.add('hidden');
 
-            // بعد التحميل، نظهر شاشة الترحيب دائماً (بدون التحقق من localStorage)
+            // بعد التحميل، نظهر شاشة الترحيب دائماً
             startLoadingAndThen(() => {
                 loadingOverlay.classList.add('hidden');
                 welcomeOverlay.classList.remove('hidden');
